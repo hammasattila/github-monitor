@@ -1,7 +1,5 @@
 # GitHub Monitor
 
-
-
 ## Available Scripts
 
 In the project directory, you can run:
@@ -45,12 +43,10 @@ You can learn more in the [Create React App documentation](https://facebook.gith
 
 To learn React, check out the [React documentation](https://reactjs.org/).
 
-## Development documentation
-
 ### Setup
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) using the **typscript** template.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) using the **redux-typescript** template.
 
 ```shell
-npx create-react-app github-monitor --template typescript
+npx create-react-app github-monitor --template redux-typescript
 ```
