@@ -1,35 +1,29 @@
 import React, { FC, useState } from 'react';
 import {
-	EuiButton,
-	EuiEmptyPrompt,
+	EuiEmptyPrompt, EuiFlexGroup,
+	EuiIcon,
 	EuiPage,
 	EuiPageBody,
 	EuiPageHeader,
 	EuiPageSection,
-	EuiPageSidebar
+	EuiPageSidebar, EuiText
 } from '@elastic/eui';
 import { LoginData } from "../components/GithubLogin";
-import { ApolloProvider, useQuery } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client";
 import { GraphQL } from "../services/GraphQLService";
-import { Panel } from "../components/Panel";
 import { Sidebar } from "../components/Sidebar";
 import { AppDispatch } from "./store";
 import { NotificationContainer } from "../components/NotificationContainer";
 import {
 	addNotification,
-	clearNotifications,
 	errorNotification,
 	successNotification
 } from "../features/notificationSlice";
 import { useDispatch } from "react-redux";
-import { graphql } from "../api";
-
-//import '@elastic/eui/dist/eui_theme_light.css'; //Light theme
-import '@elastic/eui/dist/eui_theme_dark.css'; //Dark theme
 import './App.css';
 
 export const App: FC = () => {
-	const [token, setToken] = useState(process.env.GITHUB_ACCESS_TOKEN);
+	const [token, setToken] = useState(process.env.REACT_APP_GITHUB_ACCESS_TOKEN);
 	const dispatch: AppDispatch = useDispatch();
 	
 	const handleLogin = (data: LoginData): void => {
@@ -52,81 +46,19 @@ export const App: FC = () => {
 			addNotification(errorNotification("Invalid Token!"))
 		);
 	}
-
-    const test = graphql(/* GraphQL */`
-        query test {
-            repository(owner:"octocat", name:"Hello-World") {
-                issues(last:20, states:CLOSED) {
-                    edges {
-                        node {
-                            title
-                            url
-                            labels(first:5) {
-                                edges {
-                                    node {
-                                        name
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-		`);
-    const test2 = graphql(/* GraphQL */`
-        query test2 {
-            viewer {
-		            organizations(first:5) {
-				            nodes {
-						            name
-						            url
-                    }
-		            }
-		            repositories(first: 4){
-				            nodes {
-						            name
-						            url
-                    }
-		            }
-            }
-        }
-		`);
-	
-	function DisplayLocations() {
-		const {loading, error, data} = useQuery(test);
-		
-		if (loading) return <p>Loading...</p>;
-		if (error) return <p>Error :(</p>;
-		
-		console.log(data);
-		return <p>asd</p>;
-	}
-	
-	function DisplayLocations2() {
-		const {loading, error, data} = useQuery(test2);
-		
-		if (loading) return <p>Loading...</p>;
-		if (error) return <p>Error :(</p>;
-		console.log(data);
-		return <p>asd</p>;
-	}
 	
 	const content = token ? (
-		<Panel>
-			You are logged in!
-			<DisplayLocations></DisplayLocations>
-			<DisplayLocations2></DisplayLocations2>
-		</Panel>
+		<EuiEmptyPrompt
+			title={<span>You are logged in!</span>}
+			body={<h3>Please select a repo!</h3>}
+			color={'plain'}
+		/>
 	) : (
-		<>
-			<EuiEmptyPrompt
-				title={<span>Not logged in</span>}
-				body={<h3>Please log in to use the app!</h3>}
-				color={'plain'}
-			/>
-		</>
-		
+		<EuiEmptyPrompt
+			title={<span>Not logged in</span>}
+			body={<h3>Please log in to use the app!</h3>}
+			color={'plain'}
+		/>
 	);
 	
 	const app = (
@@ -137,7 +69,13 @@ export const App: FC = () => {
 				</EuiPageSidebar>
 				<EuiPageBody component="div" paddingSize="s" panelled={true}>
 					<EuiPageSection bottomBorder="extended" paddingSize="s" alignment="horizontalCenter" color="plain">
-						<EuiPageHeader pageTitle="GitHub Monitor"/>
+						<EuiPageHeader paddingSize="s">
+							<EuiFlexGroup justifyContent="spaceAround" alignItems="center">
+								<EuiIcon type="logoGithub" size="xl"/>
+								<EuiText><h1>GitHub Monitor</h1></EuiText>
+								<EuiIcon type="desktop" size="xl"/>
+							</EuiFlexGroup>
+						</EuiPageHeader>
 					</EuiPageSection>
 					<EuiPageSection grow={false} paddingSize="s" color="plain">
 						{content}

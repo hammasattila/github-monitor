@@ -26,7 +26,8 @@ class GraphQLService {
 		
 		return new ApolloClient({
 			link: from([authLink, errorLink, httpLink]),
-			cache: new InMemoryCache()
+			cache: new InMemoryCache(),
+			connectToDevTools: true
 		});
 	}
 }

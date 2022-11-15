@@ -42,6 +42,3 @@ export const GithubLogin: FC<Props> = ({onLogin}: Props) => {
 		</Panel>
 	);
 };
-/*
-
- */

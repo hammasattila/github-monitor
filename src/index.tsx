@@ -7,6 +7,9 @@ import './index.css';
 import { EuiProvider } from "@elastic/eui";
 import ReactDOM from 'react-dom';
 
+//import '@elastic/eui/dist/eui_theme_light.css'; //Light theme
+import '@elastic/eui/dist/eui_theme_dark.css'; //Dark theme
+
 ReactDOM.render(
 	<React.StrictMode>
 		<Provider store={store}>
