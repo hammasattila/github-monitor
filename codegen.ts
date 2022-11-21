@@ -2,12 +2,14 @@ import { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
 	schema: 'schema.graphql',
-	documents: ['src/**/*.tsx', '!src/api/**/*'],
+	documents: ['src/**/*.graphql'],
 	ignoreNoDocuments: true,
-	require: ['ts-node/register'],
 	generates: {
 		'./src/api/': {
 			preset: 'client',
+			config: {
+				namingConvention: "keep"
+			},
 			plugins: []
 		}
 	}

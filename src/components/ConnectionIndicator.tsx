@@ -1,35 +1,26 @@
-import React, { FC } from 'react';
-import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiHealth, EuiPanel, EuiSpacer, EuiText } from '@elastic/eui';
+import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiHealth, EuiText } from '@elastic/eui';
+import { Panel } from "./Panel";
 
 interface Props {
 	isLoggedIn: boolean
 	onLogout: () => void
 }
 
-export const ConnectionIndicator: FC<Props> = ({isLoggedIn, onLogout}: Props) => {
-	
-	let color = 'subdued';
-	let connectionState = "Disconnected";
-	if (isLoggedIn) {
-		color = 'success';
-		connectionState = "Connected"
-	}
-	
+export const ConnectionIndicator = ({isLoggedIn, onLogout}: Props) => {
 	return (
 		<>
-			<EuiPanel>
+			<Panel>
 				<EuiFlexGroup justifyContent="spaceBetween">
 					<EuiFlexItem grow={false}>
-						<EuiHealth color={color}>
-							<EuiText size="m">{connectionState}</EuiText>
+						<EuiHealth color={isLoggedIn ? 'success' : 'subdued'}>
+							<EuiText size="m">{isLoggedIn ? "Connected" : "Disconnected"}</EuiText>
 						</EuiHealth>
 					</EuiFlexItem>
 					<EuiFlexItem grow={false}>
 						<EuiButtonIcon iconType="exit" aria-label="Logout" iconSize="m" onClick={onLogout}/>
 					</EuiFlexItem>
 				</EuiFlexGroup>
-			</EuiPanel>
-			<EuiSpacer size="s"/>
+			</Panel>
 		</>
 	);
 };

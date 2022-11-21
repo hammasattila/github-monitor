@@ -1,5 +1,5 @@
 import { EuiButton, EuiFieldText, EuiForm, EuiFormRow } from "@elastic/eui";
-import { FC, FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Panel } from "./Panel";
 
 export interface LoginData {
@@ -10,7 +10,7 @@ interface Props {
 	onLogin: (data: LoginData) => void;
 }
 
-export const GithubLogin: FC<Props> = ({onLogin}: Props) => {
+export const GithubLogin = ({onLogin}: Props) => {
 	const [token, setToken] = useState('');
 	
 	const handleSubmit = (event: FormEvent): void => {

@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import { EuiHorizontalRule, EuiPanel, EuiSpacer, EuiTitle } from '@elastic/eui';
 
 interface Props {
@@ -6,7 +6,7 @@ interface Props {
 	customTitle?: JSX.Element;
 }
 
-export const Panel: FC<PropsWithChildren<Props>> = ({children, title, customTitle}) => {
+export const Panel = ({children, title, customTitle}: PropsWithChildren<Props>) => {
 	return (
 		<>
 			<EuiPanel>

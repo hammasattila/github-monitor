@@ -1,12 +1,16 @@
-import React, { FC, useState } from 'react';
+import { useState } from 'react';
 import {
-	EuiEmptyPrompt, EuiFlexGroup,
+	EuiEmptyPrompt,
+	EuiFlexGroup,
 	EuiIcon,
+	EuiLink,
 	EuiPage,
 	EuiPageBody,
 	EuiPageHeader,
 	EuiPageSection,
-	EuiPageSidebar, EuiText
+	EuiPageSidebar,
+	EuiSpacer,
+	EuiText
 } from '@elastic/eui';
 import { LoginData } from "../components/GithubLogin";
 import { ApolloProvider } from "@apollo/client";
@@ -14,51 +18,55 @@ import { GraphQL } from "../services/GraphQLService";
 import { Sidebar } from "../components/Sidebar";
 import { AppDispatch } from "./store";
 import { NotificationContainer } from "../components/NotificationContainer";
-import {
-	addNotification,
-	errorNotification,
-	successNotification
-} from "../features/notificationSlice";
+import { addNotification, errorNotification, successNotification } from "../features/notificationSlice";
 import { useDispatch } from "react-redux";
 import './App.css';
+import { RepoDetails } from "../components/RepoDetails";
+import { AppSelector } from "./types";
 
-export const App: FC = () => {
+export const App = () => {
+	const navi = AppSelector((state) => state.navigation);
 	const [token, setToken] = useState(process.env.REACT_APP_GITHUB_ACCESS_TOKEN);
 	const dispatch: AppDispatch = useDispatch();
 	
 	const handleLogin = (data: LoginData): void => {
 		setToken(data.token);
-		dispatch(
-			addNotification(successNotification("Logged in!"))
-		);
+		dispatch(addNotification(successNotification("Logged in!")));
 	}
 	
 	const handleLogout = (): void => {
-		setToken('');
-		dispatch(
-			addNotification(successNotification("Logged out!"))
-		);
+		setToken(undefined);
+		dispatch(addNotification(successNotification("Logged out!")));
 	}
 	
 	const handleLogoutWError = (): void => {
-		setToken('');
-		dispatch(
-			addNotification(errorNotification("Invalid Token!"))
-		);
+		setToken(undefined);
+		dispatch(addNotification(errorNotification("Invalid Token!")));
 	}
 	
-	const content = token ? (
-		<EuiEmptyPrompt
-			title={<span>You are logged in!</span>}
-			body={<h3>Please select a repo!</h3>}
-			color={'plain'}
-		/>
+	const loggedInContent = navi.selectedRepo ? (
+		<RepoDetails/>
 	) : (
-		<EuiEmptyPrompt
-			title={<span>Not logged in</span>}
-			body={<h3>Please log in to use the app!</h3>}
-			color={'plain'}
-		/>
+		<>
+			<EuiSpacer size="l"/>
+			<EuiEmptyPrompt
+				title={<span>You are logged in!</span>}
+				body={<h3>Please select a repo!</h3>}
+				color={'plain'}
+			/>
+		</>
+	);
+	
+	const content = token ? loggedInContent : (
+		<>
+			<EuiSpacer size="l"/>
+			<EuiEmptyPrompt
+				title={<span>Not logged in</span>}
+				body={(<><h3>Please log in to use the app!</h3><EuiLink
+					href="https://docs.github.com/en/graphql/guides/forming-calls-with-graphql">Instructions</EuiLink></>)}
+				color={'plain'}
+			/>
+		</>
 	);
 	
 	const app = (

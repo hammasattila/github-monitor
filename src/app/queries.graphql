@@ -1,0 +1,193 @@
+query Viewer {
+  viewer {
+    id
+    name
+    login
+    avatarUrl
+  }
+}
+
+query ViewerOrgs($first:Int!,$end:String) {
+  viewer {
+    id
+    organizations(first: $first, after: $end) {
+      nodes {
+        id
+        name
+        url
+        avatarUrl
+        login
+        repositories(affiliations: OWNER) {
+          totalCount
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+      totalCount
+    }
+  }
+}
+
+query ViewerRepos($first:Int!,$end:String) {
+  viewer {
+    id
+    repositories(first: $first, after: $end) {
+      nodes {
+        id
+        name
+        openGraphImageUrl
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+      totalCount
+    }
+  }
+}
+
+query SearchRepo($owner:String!,$repo:String!) {
+  repository(owner: $owner, name: $repo){
+    id
+    name
+    openGraphImageUrl
+  }
+}
+
+query RepoInfo($id:ID!) {
+  node(id: $id) {
+    ... on Repository {
+      id
+      nameWithOwner
+      openGraphImageUrl
+      defaultBranchRef{
+        target{
+          ... on Commit{
+            history(first:1){
+              nodes{
+                ... on Commit{
+                  statusCheckRollup {
+                    state
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query OrgRepos($id:ID!,$first:Int!,$end:String) {
+  node(id: $id) {
+    ... on Organization {
+      id
+      repositories(first: $first, after: $end) {
+        nodes {
+          id
+          name
+          openGraphImageUrl
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        totalCount
+      }
+    }
+  }
+}
+
+query PRs($id:ID!,$first:Int,$end:String,$start:String,$last:Int) {
+  node(id: $id) {
+    ... on Repository {
+      id
+      pullRequests(first: $first, after: $end, before: $start, last: $last, orderBy: {field: CREATED_AT, direction: DESC}){
+        nodes {
+          id
+          number
+          title
+          closed
+          url
+          author {
+            login
+            avatarUrl
+            url
+          }
+          comments(last: 1){
+            nodes {
+              id
+              bodyText
+            }
+          }
+        }
+        pageInfo {
+          startCursor
+          endCursor
+          hasNextPage
+          hasPreviousPage
+        }
+        totalCount
+      }
+    }
+  }
+}
+
+query PRComments($id:ID!,$last:Int!) {
+  node(id: $id) {
+    ... on PullRequest {
+      id
+      comments(last: $last){
+        nodes {
+          id
+          author {
+            login
+            avatarUrl
+          }
+          createdAt
+          bodyText
+        }
+      }
+    }
+  }
+}
+
+query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){#, $since:DateTime!) {
+  node(id: $id) {
+    ... on Repository {
+      id
+      collaborators(first: $first, after: $end, before: $start, last: $last) {
+        nodes {
+          id
+          login
+          name
+          avatarUrl
+          #contributionsCollection (from: $since) {
+          #  commitContributionsByRepository {
+          #    contributions (first: 3){
+          #      nodes {
+          #        commitCount
+          #      }
+          #      pageInfo {
+          #        endCursor
+          #        hasNextPage
+          #      }
+          #      totalCount
+          #    }
+          #  }
+          #}
+        }
+        pageInfo {
+          startCursor
+          endCursor
+          hasNextPage
+          hasPreviousPage
+        }
+        totalCount
+      }
+    }
+  }
+}

@@ -4,6 +4,8 @@ import { AnyAction, AsyncThunk, AsyncThunkPayloadCreator, createAsyncThunk, Thun
 import { AppDispatch } from "./store";
 
 export const defined = <T>(x: T | undefined): x is T => x !== undefined;
+export const definedNN = <T>(x: T | undefined | null): x is T => x !== undefined && x !== null;
+export type ArrayElement<A> = A extends readonly (infer T)[] ? T : never;
 
 export const AppSelector: <T = unknown>(
 	selector: (state: RootState) => T
