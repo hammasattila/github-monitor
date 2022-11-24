@@ -20,7 +20,8 @@
 			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"eamodio.gitlens",
-				"mhutchie.git-graph"
+				"mhutchie.git-graph",
+				"GraphQL.vscode-graphql"
 			]
 		}
 	},

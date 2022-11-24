@@ -191,3 +191,65 @@ query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){#, $since:
     }
   }
 }
+
+query CommitsForRepo($repoNodeId: ID!) {
+  node(id: $repoNodeId) {
+    ... on Repository {
+      name
+      defaultBranchRef {
+        name
+        target {
+          ... on Commit {
+            history {
+              totalCount
+              nodes {
+                author {
+                  name
+                  user {
+                    email
+                    login
+                    name
+                  }
+                }
+                additions
+                deletions
+                committedDate
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query CommitsForRepoSince($repoNodeId: ID!, $since: GitTimestamp!) {
+  node(id: $repoNodeId) {
+    ... on Repository {
+      name
+      defaultBranchRef {
+        name
+        target {
+          ... on Commit {
+            history(since: $since) {
+              totalCount
+              nodes {
+                author {
+                  name
+                  user {
+                    email
+                    login
+                    name
+                  }
+                }
+                additions
+                deletions
+                committedDate
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

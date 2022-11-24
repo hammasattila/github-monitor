@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { addNotification, errorNotification } from "../features/notificationSlice";
 import { CollabsDocument, CollabsQuery } from "../api/graphql";
 import { Page, PaginatedTable } from "./PaginatedTable";
+import { useCommits } from "../hooks/Commits";
 
 type Repo = Extract<CollabsQuery['node'], { __typename?: 'Repository' | undefined }>
 type Collab =
@@ -18,7 +19,7 @@ export const Insights = () => {
 	const SevenDaysEarlier = new Date();
 	SevenDaysEarlier.setTime(SevenDaysEarlier.getTime() - (7 * 24 * 3600000));
 	const initialPageSize = 2; //0 = all !! NEVER set it 0
-	const {loading, error, data, refetch, fetchMore} = useQuery(CollabsDocument, {
+	const { loading, error, data, refetch, fetchMore } = useQuery(CollabsDocument, {
 		variables: {
 			id: navi.selectedRepo ?? "",
 			//since: SevenDaysEarlier,
@@ -37,26 +38,44 @@ export const Insights = () => {
 			userinfo: collab
 		}
 	});
-	
+
+	const { agregatedCommitsByUser, loaded: loadedCommitData } = useCommits(navi.selectedRepo ?? "");
+
 	const columns = [
 		{
 			field: 'userinfo',
 			name: 'User',
-			render: ({name, login, avatarUrl}: { name?: string | null, login: string, avatarUrl: string }) => (
-				<><EuiAvatar name={name ?? login} imageUrl={avatarUrl} style={{marginRight: '10px'}}/>
+			render: ({ name, login, avatarUrl }: { name?: string | null, login: string, avatarUrl: string }) => (
+				<><EuiAvatar name={name ?? login} imageUrl={avatarUrl} style={{ marginRight: '10px' }} />
 					<EuiLink href={`https://github.com/${login}`} target="_blank">
 						{name ?? login}
 					</EuiLink></>
 			)
+		},
+		{
+			field: 'userinfo',
+			name: 'Contribution ( Commits | Additions | Deletions )',
+			render: ({ login }: { login: string })  => {
+				if (!loadedCommitData) {
+					return "Loading...";
+				}
+
+				const agregatedData = agregatedCommitsByUser[login];
+				if (agregatedData === undefined) {
+					return "Unknown";
+				}
+
+				return `C: ${agregatedData.totalCount} | A: ${agregatedData.totalAdditions} | D: ${agregatedData.totalDeletions}`;
+			}
 		}
 	];
-	
+
 	const handleChange = async (page: Page, oldpage: Page) => {
 		if (oldpage.size !== page.size || page.index === 0) { //change size, first
-			const res = await refetch({first: page.size, last: null, start: null, end: null});
+			const res = await refetch({ first: page.size, last: null, start: null, end: null });
 			return !!res.data;
 		} else if (page.index + 1 === Math.ceil(totalItemCount / page.size)) { //last
-			const res = await fetchMore({variables: {first: null, last: page.size, start: null, end: null}})
+			const res = await fetchMore({ variables: { first: null, last: page.size, start: null, end: null } })
 			return !!res?.data;
 		} else if (oldpage.index < page.index && collabEdges?.pageInfo.hasNextPage) { //forward
 			const res = await fetchMore({
@@ -81,7 +100,7 @@ export const Insights = () => {
 		}
 		return false;
 	}
-	
+
 	return (
 		<PaginatedTable<Collab>
 			pageOfItems={pageOfItems}
