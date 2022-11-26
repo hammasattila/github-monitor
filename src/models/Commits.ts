@@ -1,7 +1,9 @@
 import { CommitsForRepoQuery, CommitsForRepoSinceQuery } from "../api/graphql"
 
 
-export type RepositoryWithCommits = Extract<CommitsForRepoQuery['node'], { __typename?: 'Repository' | undefined }> | Extract<CommitsForRepoSinceQuery['node'], { __typename?: 'Repository' | undefined }>
+export type RepositoryWithCommits =
+  Extract<CommitsForRepoQuery['node'], { __typename?: 'Repository' | undefined }>
+  | Extract<CommitsForRepoSinceQuery['node'], { __typename?: 'Repository' | undefined }>
 
 export type Commit = {
     author: string,
@@ -10,10 +12,10 @@ export type Commit = {
     date: Date
 }
 
-export type AgregatedCommit = Commit & { count: number }
+export type AggregatedCommit = Commit & { count: number }
 
-export type AgregatedCommits = {
-    weeks: { [key: string]: AgregatedCommit }
+export type AggregatedCommits = {
+    weeks: { [key: string]: AggregatedCommit }
     totalCount: number,
     totalAdditions: number,
     totalDeletions: number,
@@ -25,6 +27,6 @@ export type UserContribution = {
     [author: string]: Commit[]
 }
 
-export type AgregatedUserContribution = {
-    [author: string]: AgregatedCommits
+export type AggregatedUserContribution = {
+    [author: string]: AggregatedCommits
 }

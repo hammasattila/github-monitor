@@ -51,11 +51,6 @@ class GraphQLService {
 						fields: {
 							comments: relayStylePagination()
 						}
-					},
-					Query: {
-						fields: {
-							contributions: relayStylePagination()//TODO
-						}
 					}
 				}
 			})

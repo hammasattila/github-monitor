@@ -1,13 +1,13 @@
 import { useQuery } from "@apollo/client";
 import { AppSelector, ArrayElement, definedNN } from "../app/types";
-import { EuiAvatar, EuiLink } from '@elastic/eui';
+import { EuiAvatar, EuiLink, EuiLoadingContent } from '@elastic/eui';
 import { AppDispatch } from "../app/store";
 import { useDispatch } from "react-redux";
 import { addNotification, errorNotification } from "../features/notificationSlice";
 import { CollabsDocument, CollabsQuery } from "../api/graphql";
 import { Page, PaginatedTable } from "./PaginatedTable";
 import { useCommits } from "../hooks/Commits";
-import { CommitAnalysis } from "./CommitAnalysys";
+import { CommitAnalysis } from "./CommitAnalysis";
 import moment from "moment";
 
 type Repo = Extract<CollabsQuery['node'], { __typename?: 'Repository' | undefined }>
@@ -18,13 +18,10 @@ type Collab =
 export const Insights = () => {
 	const navi = AppSelector((state) => state.navigation);
 	const dispatch: AppDispatch = useDispatch();
-	const SevenDaysEarlier = new Date();
-	SevenDaysEarlier.setTime(SevenDaysEarlier.getTime() - (7 * 24 * 3600000));
 	const initialPageSize = 2; //0 = all !! NEVER set it 0
-	const { loading, error, data, refetch, fetchMore } = useQuery(CollabsDocument, {
+	const {loading, error, data, refetch, fetchMore} = useQuery(CollabsDocument, {
 		variables: {
 			id: navi.selectedRepo ?? "",
-			//since: SevenDaysEarlier,
 			first: initialPageSize
 		},
 		errorPolicy: "all"
@@ -40,51 +37,83 @@ export const Insights = () => {
 			userinfo: collab
 		}
 	});
-
-	const { commitsByUser, agregatedCommitsByUser, loaded: loadedCommitData } = useCommits(navi.selectedRepo ?? "");
-
+	
+	const {commitsByUser, aggregatedCommitsByUser, loaded: loadedCommitData} = useCommits(navi.selectedRepo ?? "");
+	
 	const columns = [
 		{
 			field: 'userinfo',
 			name: 'User',
-			render: ({ name, login, avatarUrl }: { name?: string | null, login: string, avatarUrl: string }) => (
-				<><EuiAvatar name={name ?? login} imageUrl={avatarUrl} style={{ marginRight: '10px' }} />
+			render: ({name, login, avatarUrl}: { name?: string | null, login: string, avatarUrl: string }) => (
+				<><EuiAvatar name={name ?? login} imageUrl={avatarUrl} style={{marginRight: '10px'}}/>
 					<EuiLink href={`https://github.com/${login}`} target="_blank">
 						{name ?? login}
 					</EuiLink></>
 			)
 		},
 		{
-			field: 'userinfo',
-			name: 'Contribution ( Commits | Additions | Deletions )',
-			render: ({ login }: { login: string }) => {
+			field: 'login',
+			name: 'Commits',
+			render: (login: string) => {
 				if (!loadedCommitData) {
-					return "Loading...";
+					return <EuiLoadingContent/>;
 				}
-
-				const agregatedData = agregatedCommitsByUser[login];
-				if (agregatedData === undefined) {
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
 					return "Unknown";
 				}
-
-				return `C: ${agregatedData.totalCount} | A: ${agregatedData.totalAdditions} | D: ${agregatedData.totalDeletions}`;
+				
+				return `${aggregatedData.totalCount}`;
 			}
 		},
 		{
-			field: 'userinfo',
-			name: 'Commit density',
-			render: ({ login }: { login: string }) => {
+			field: 'login',
+			name: 'Additions',
+			render: (login: string) => {
 				if (!loadedCommitData) {
-					return "Loading...";
+					return <EuiLoadingContent/>;
 				}
-
-				const agregatedData = agregatedCommitsByUser[login];
-				if (agregatedData === undefined) {
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
 					return "Unknown";
 				}
-
-				const days = moment(agregatedData.firstCommitDate).diff(moment(agregatedData.lastCommitDate), 'days') + 1;
-				const commitsPerDay = agregatedData.totalCount / days;
+				
+				return `${aggregatedData.totalAdditions}`;
+			}
+		},
+		{
+			field: 'login',
+			name: 'Deletions',
+			render: (login: string) => {
+				if (!loadedCommitData) {
+					return <EuiLoadingContent/>;
+				}
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
+					return "Unknown";
+				}
+				
+				return `${aggregatedData.totalDeletions}`;
+			}
+		},
+		{
+			field: 'login',
+			name: 'Commit density',
+			render: (login: string) => {
+				if (!loadedCommitData) {
+					return <EuiLoadingContent/>;
+				}
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
+					return "Unknown";
+				}
+				
+				const days = moment(aggregatedData.firstCommitDate).diff(moment(aggregatedData.lastCommitDate), 'days') + 1;
+				const commitsPerDay = aggregatedData.totalCount / days;
 				
 				if (commitsPerDay < 0.5) {
 					return `${(commitsPerDay * 7).toFixed(2)} commits/week`;
@@ -94,13 +123,13 @@ export const Insights = () => {
 			}
 		}
 	];
-
+	
 	const handleChange = async (page: Page, oldpage: Page) => {
 		if (oldpage.size !== page.size || page.index === 0) { //change size, first
-			const res = await refetch({ first: page.size, last: null, start: null, end: null });
+			const res = await refetch({first: page.size, last: null, start: null, end: null});
 			return !!res.data;
 		} else if (page.index + 1 === Math.ceil(totalItemCount / page.size)) { //last
-			const res = await fetchMore({ variables: { first: null, last: page.size, start: null, end: null } })
+			const res = await fetchMore({variables: {first: null, last: page.size, start: null, end: null}})
 			return !!res?.data;
 		} else if (oldpage.index < page.index && collabEdges?.pageInfo.hasNextPage) { //forward
 			const res = await fetchMore({
@@ -125,12 +154,12 @@ export const Insights = () => {
 		}
 		return false;
 	}
-
-	const handleExpand = ({ userinfo }: Collab) =>
+	
+	const handleExpand = ({login}: Collab) =>
 		<CommitAnalysis
-			commits={commitsByUser[userinfo?.login ?? ""]}
-			agregatedCommits={agregatedCommitsByUser[userinfo?.login ?? ""]} />
-
+			commits={commitsByUser[login]}
+			aggregatedCommits={aggregatedCommitsByUser[login]}/>
+	
 	return (
 		<PaginatedTable<Collab>
 			pageOfItems={pageOfItems}

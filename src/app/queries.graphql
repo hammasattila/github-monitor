@@ -155,7 +155,7 @@ query PRComments($id:ID!,$last:Int!) {
   }
 }
 
-query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){#, $since:DateTime!) {
+query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){
   node(id: $id) {
     ... on Repository {
       id
@@ -165,20 +165,6 @@ query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){#, $since:
           login
           name
           avatarUrl
-          #contributionsCollection (from: $since) {
-          #  commitContributionsByRepository {
-          #    contributions (first: 3){
-          #      nodes {
-          #        commitCount
-          #      }
-          #      pageInfo {
-          #        endCursor
-          #        hasNextPage
-          #      }
-          #      totalCount
-          #    }
-          #  }
-          #}
         }
         pageInfo {
           startCursor
