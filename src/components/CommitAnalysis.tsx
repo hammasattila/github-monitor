@@ -1,16 +1,18 @@
-import React, { Fragment, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { AggregatedCommits, Commit } from "../models/Commits"
-import { Axis, BarSeries, Chart, DARK_THEME, Settings } from "@elastic/charts";
-import '@elastic/charts/dist/theme_dark.css';
+import { Axis, BarSeries, Chart, Settings } from "@elastic/charts";
 import moment from "moment";
+import { useEuiTheme } from "@elastic/eui";
+import { EUI_CHARTS_THEME_DARK, EUI_CHARTS_THEME_LIGHT } from '@elastic/eui/dist/eui_charts_theme';
 
 interface CommitAnalysisProps {
 	commits: Commit[]
 	aggregatedCommits: AggregatedCommits
 }
 
-export const CommitAnalysis: React.FC<CommitAnalysisProps> = ({commits, aggregatedCommits}) => {
-	
+export const CommitAnalysis = ({commits, aggregatedCommits}: CommitAnalysisProps) => {
+	const theme = useEuiTheme();
+	const euiTheme = theme.colorMode === "DARK" ? EUI_CHARTS_THEME_DARK.theme : EUI_CHARTS_THEME_LIGHT.theme;
 	let [aggregatedData, setAggregatedData] = useState<{
 		week: string
 		group: string
@@ -42,9 +44,9 @@ export const CommitAnalysis: React.FC<CommitAnalysisProps> = ({commits, aggregat
 	
 	
 	return (
-		<Fragment>
+		<>
 			<Chart size={{height: 200}}>
-				<Settings theme={DARK_THEME} showLegend={false}/>
+				<Settings theme={euiTheme} showLegend={false}/>
 				<BarSeries
 					id="changes"
 					name="Changes"
@@ -58,7 +60,7 @@ export const CommitAnalysis: React.FC<CommitAnalysisProps> = ({commits, aggregat
 				<Axis id="left-axis" position="left" showGridLines/>
 			</Chart>
 			<Chart size={{height: 200}}>
-				<Settings theme={DARK_THEME} showLegend={false}/>
+				<Settings theme={euiTheme} showLegend={false}/>
 				<BarSeries
 					id="commits"
 					name="Commits"
@@ -71,6 +73,6 @@ export const CommitAnalysis: React.FC<CommitAnalysisProps> = ({commits, aggregat
 				<Axis id="bottom-axis" position="bottom" showGridLines/>
 				<Axis id="left-axis" position="left" showGridLines/>
 			</Chart>
-		</Fragment>
+		</>
 	);
 }

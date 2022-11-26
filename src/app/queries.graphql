@@ -181,11 +181,13 @@ query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){
 query CommitsForRepo($repoNodeId: ID!) {
   node(id: $repoNodeId) {
     ... on Repository {
+      id
       name
       defaultBranchRef {
         name
         target {
           ... on Commit {
+            id
             history {
               totalCount
               nodes {
@@ -212,11 +214,13 @@ query CommitsForRepo($repoNodeId: ID!) {
 query CommitsForRepoSince($repoNodeId: ID!, $since: GitTimestamp!) {
   node(id: $repoNodeId) {
     ... on Repository {
+      id
       name
       defaultBranchRef {
         name
         target {
           ... on Commit {
+            id
             history(since: $since) {
               totalCount
               nodes {

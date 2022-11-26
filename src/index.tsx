@@ -8,7 +8,9 @@ import { EuiProvider } from "@elastic/eui";
 import ReactDOM from 'react-dom';
 
 //import '@elastic/eui/dist/eui_theme_light.css'; //Light theme
+//import '@elastic/charts/dist/theme_only_dark.css'; // for charts
 import '@elastic/eui/dist/eui_theme_dark.css'; //Dark theme
+import '@elastic/charts/dist/theme_only_dark.css'; //for charts
 
 ReactDOM.render(
 	<React.StrictMode>
