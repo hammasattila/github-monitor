@@ -7,6 +7,8 @@ import { addNotification, errorNotification } from "../features/notificationSlic
 import { CollabsDocument, CollabsQuery } from "../api/graphql";
 import { Page, PaginatedTable } from "./PaginatedTable";
 import { useCommits } from "../hooks/Commits";
+import { CommitAnalysis } from "./CommitAnalysys";
+import moment from "moment";
 
 type Repo = Extract<CollabsQuery['node'], { __typename?: 'Repository' | undefined }>
 type Collab =
@@ -39,7 +41,7 @@ export const Insights = () => {
 		}
 	});
 
-	const { agregatedCommitsByUser, loaded: loadedCommitData } = useCommits(navi.selectedRepo ?? "");
+	const { commitsByUser, agregatedCommitsByUser, loaded: loadedCommitData } = useCommits(navi.selectedRepo ?? "");
 
 	const columns = [
 		{
@@ -55,7 +57,7 @@ export const Insights = () => {
 		{
 			field: 'userinfo',
 			name: 'Contribution ( Commits | Additions | Deletions )',
-			render: ({ login }: { login: string })  => {
+			render: ({ login }: { login: string }) => {
 				if (!loadedCommitData) {
 					return "Loading...";
 				}
@@ -66,6 +68,29 @@ export const Insights = () => {
 				}
 
 				return `C: ${agregatedData.totalCount} | A: ${agregatedData.totalAdditions} | D: ${agregatedData.totalDeletions}`;
+			}
+		},
+		{
+			field: 'userinfo',
+			name: 'Commit density',
+			render: ({ login }: { login: string }) => {
+				if (!loadedCommitData) {
+					return "Loading...";
+				}
+
+				const agregatedData = agregatedCommitsByUser[login];
+				if (agregatedData === undefined) {
+					return "Unknown";
+				}
+
+				const days = moment(agregatedData.firstCommitDate).diff(moment(agregatedData.lastCommitDate), 'days') + 1;
+				const commitsPerDay = agregatedData.totalCount / days;
+				
+				if (commitsPerDay < 0.5) {
+					return `${(commitsPerDay * 7).toFixed(2)} commits/week`;
+				} else {
+					return `${commitsPerDay.toFixed(1)} commits/day`;
+				}
 			}
 		}
 	];
@@ -101,6 +126,11 @@ export const Insights = () => {
 		return false;
 	}
 
+	const handleExpand = ({ userinfo }: Collab) =>
+		<CommitAnalysis
+			commits={commitsByUser[userinfo?.login ?? ""]}
+			agregatedCommits={agregatedCommitsByUser[userinfo?.login ?? ""]} />
+
 	return (
 		<PaginatedTable<Collab>
 			pageOfItems={pageOfItems}
@@ -110,6 +140,7 @@ export const Insights = () => {
 			itemsPerPageOptions={[50, 20, 10, initialPageSize]}
 			loading={loading}
 			onChange={handleChange}
+			onExpand={handleExpand}
 		/>
 	);
 };
