@@ -18,7 +18,7 @@ type Collab =
 export const Insights = () => {
 	const navi = AppSelector((state) => state.navigation);
 	const dispatch: AppDispatch = useDispatch();
-	const initialPageSize = 2; //0 = all !! NEVER set it 0
+	const initialPageSize = 5; //0 = all !! NEVER set it 0
 	const {loading, error, data, refetch, fetchMore} = useQuery(CollabsDocument, {
 		variables: {
 			id: navi.selectedRepo ?? "",
