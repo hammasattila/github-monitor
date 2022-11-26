@@ -31,7 +31,7 @@ export const useCommits = (repoId: string, since?: Date) => {
 		
 		if (branch?.__typename === 'Commit') {
 			const listOfCommits = branch.history.nodes ?? []
-			const cs = listOfCommits.map(c => ({
+			const cs = listOfCommits.filter((c => (c?.parents.totalCount ?? 0) <= 1)).map(c => ({
 				author: c?.author?.user?.login ?? "",
 				additions: c?.additions ?? 0,
 				deletions: c?.deletions ?? 0,
@@ -90,6 +90,8 @@ export const useCommits = (repoId: string, since?: Date) => {
 			setCommitsByUser(csbu);
 			setAggregatedCommitsByUser(acsbu);
 		}
+
+		console.debug(data)
 	}, [loading, data, error]);
 	
 	return {
