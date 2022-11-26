@@ -91,7 +91,6 @@ export const useCommits = (repoId: string, since?: Date) => {
 			setAggregatedCommitsByUser(acsbu);
 		}
 
-		console.debug(data)
 	}, [loading, data, error]);
 	
 	return {
