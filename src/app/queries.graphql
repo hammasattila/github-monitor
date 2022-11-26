@@ -202,6 +202,9 @@ query CommitsForRepo($repoNodeId: ID!) {
                 additions
                 deletions
                 committedDate
+                parents {
+                  totalCount
+                }
               }
             }
           }
@@ -235,6 +238,9 @@ query CommitsForRepoSince($repoNodeId: ID!, $since: GitTimestamp!) {
                 additions
                 deletions
                 committedDate
+                parents {
+                  totalCount
+                }
               }
             }
           }
