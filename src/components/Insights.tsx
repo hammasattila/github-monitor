@@ -1,11 +1,14 @@
 import { useQuery } from "@apollo/client";
 import { AppSelector, ArrayElement, definedNN } from "../app/types";
-import { EuiAvatar, EuiLink } from '@elastic/eui';
+import { EuiAvatar, EuiLink, EuiLoadingContent } from '@elastic/eui';
 import { AppDispatch } from "../app/store";
 import { useDispatch } from "react-redux";
 import { addNotification, errorNotification } from "../features/notificationSlice";
 import { CollabsDocument, CollabsQuery } from "../api/graphql";
 import { Page, PaginatedTable } from "./PaginatedTable";
+import { useCommits } from "../hooks/Commits";
+import { CommitAnalysis } from "./CommitAnalysis";
+import moment from "moment";
 
 type Repo = Extract<CollabsQuery['node'], { __typename?: 'Repository' | undefined }>
 type Collab =
@@ -15,13 +18,10 @@ type Collab =
 export const Insights = () => {
 	const navi = AppSelector((state) => state.navigation);
 	const dispatch: AppDispatch = useDispatch();
-	const SevenDaysEarlier = new Date();
-	SevenDaysEarlier.setTime(SevenDaysEarlier.getTime() - (7 * 24 * 3600000));
-	const initialPageSize = 2; //0 = all !! NEVER set it 0
+	const initialPageSize = 5; //0 = all !! NEVER set it 0
 	const {loading, error, data, refetch, fetchMore} = useQuery(CollabsDocument, {
 		variables: {
 			id: navi.selectedRepo ?? "",
-			//since: SevenDaysEarlier,
 			first: initialPageSize
 		},
 		errorPolicy: "all"
@@ -38,6 +38,8 @@ export const Insights = () => {
 		}
 	});
 	
+	const {commitsByUser, aggregatedCommitsByUser, loaded: loadedCommitData} = useCommits(navi.selectedRepo ?? "");
+	
 	const columns = [
 		{
 			field: 'userinfo',
@@ -48,6 +50,77 @@ export const Insights = () => {
 						{name ?? login}
 					</EuiLink></>
 			)
+		},
+		{
+			field: 'login',
+			name: 'Commits',
+			render: (login: string) => {
+				if (!loadedCommitData) {
+					return <EuiLoadingContent/>;
+				}
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
+					return "Unknown";
+				}
+				
+				return `${aggregatedData.totalCount}`;
+			}
+		},
+		{
+			field: 'login',
+			name: 'Additions',
+			render: (login: string) => {
+				if (!loadedCommitData) {
+					return <EuiLoadingContent/>;
+				}
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
+					return "Unknown";
+				}
+				
+				return `${aggregatedData.totalAdditions}`;
+			}
+		},
+		{
+			field: 'login',
+			name: 'Deletions',
+			render: (login: string) => {
+				if (!loadedCommitData) {
+					return <EuiLoadingContent/>;
+				}
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
+					return "Unknown";
+				}
+				
+				return `${aggregatedData.totalDeletions}`;
+			}
+		},
+		{
+			field: 'login',
+			name: 'Commit density',
+			render: (login: string) => {
+				if (!loadedCommitData) {
+					return <EuiLoadingContent/>;
+				}
+				
+				const aggregatedData = aggregatedCommitsByUser[login];
+				if (aggregatedData === undefined) {
+					return "Unknown";
+				}
+				
+				const days = moment(aggregatedData.firstCommitDate).diff(moment(aggregatedData.lastCommitDate), 'days') + 1;
+				const commitsPerDay = aggregatedData.totalCount / days;
+				
+				if (commitsPerDay < 0.5) {
+					return `${(commitsPerDay * 7).toFixed(2)} commits/week`;
+				} else {
+					return `${commitsPerDay.toFixed(1)} commits/day`;
+				}
+			}
 		}
 	];
 	
@@ -82,6 +155,11 @@ export const Insights = () => {
 		return false;
 	}
 	
+	const handleExpand = ({login}: Collab) =>
+		<CommitAnalysis
+			commits={commitsByUser[login]}
+			aggregatedCommits={aggregatedCommitsByUser[login]}/>
+	
 	return (
 		<PaginatedTable<Collab>
 			pageOfItems={pageOfItems}
@@ -91,6 +169,7 @@ export const Insights = () => {
 			itemsPerPageOptions={[50, 20, 10, initialPageSize]}
 			loading={loading}
 			onChange={handleChange}
+			onExpand={handleExpand}
 		/>
 	);
 };
