@@ -30,7 +30,7 @@ export const CommitAnalysis = ({commits, aggregatedCommits}: CommitAnalysisProps
 		const data = Object.keys(weeks).map((key: string) => {
 			const week = weeks[key];
 			const m = moment(new Date(key));
-			const nm = m.add(7, 'days');
+			const nm = m.clone().add(7, 'days');
 			return {
 				week: `${m.year()}.${m.month()}.${m.date()} - ${nm.year()}.${nm.month()}.${nm.date()}`,
 				group: "C",
