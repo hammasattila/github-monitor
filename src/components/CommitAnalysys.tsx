@@ -5,12 +5,10 @@ import {
     BarSeries,
     Chart,
     DARK_THEME,
-    LineSeries,
     Settings
 } from "@elastic/charts";
 import '@elastic/charts/dist/theme_dark.css';
 import moment from "moment";
-import { EuiColorPalettePicker, EuiFlexGroup, EuiFlexItem, EuiSpacer, EuiText } from "@elastic/eui";
 
 interface CommitAnalysisProps {
     commits: Commit[]
