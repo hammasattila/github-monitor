@@ -1,7 +1,7 @@
 import { ConnectionIndicator } from './ConnectionIndicator';
 import { GithubLogin, LoginData } from "./GithubLogin";
 import { UserInfo } from "./UserInfo";
-import { RepoList } from "./Lists";
+import { RepoList } from "./RepoList";
 import { Panel } from "./Panel";
 
 interface Props {

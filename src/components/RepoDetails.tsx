@@ -9,7 +9,7 @@ import {
 	EuiText
 } from '@elastic/eui';
 import { PullRequests } from "./PullRequests";
-import { Insights } from "./Insights";
+import { ContributorList } from "./ContributorList";
 import { useQuery } from "@apollo/client";
 import { AppSelector } from "../app/types";
 import { RepoInfoDocument, StatusState } from "../api/graphql";
@@ -24,7 +24,7 @@ export const RepoDetails = () => {
 	const insightsTab = {
 		id: 'insights',
 		name: 'Insights',
-		content: <><EuiSpacer/><Insights/></>
+		content: <><EuiSpacer/><ContributorList/></>
 	}
 	
 	const PRsTab = {

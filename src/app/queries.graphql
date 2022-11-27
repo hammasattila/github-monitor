@@ -178,34 +178,34 @@ query Collabs($id:ID!,$first:Int,$end:String,$start:String,$last:Int){
   }
 }
 
-query CommitsForRepo($repoNodeId: ID!) {
-  node(id: $repoNodeId) {
+query LatestCommitForRepo($repoId: ID!) {
+  node(id: $repoId) {
     ... on Repository {
       id
-      name
       defaultBranchRef {
-        name
+        id
         target {
           ... on Commit {
             id
-            history {
-              totalCount
-              nodes {
-                author {
-                  name
-                  user {
-                    email
-                    login
-                    name
-                  }
-                }
-                additions
-                deletions
-                committedDate
-                parents {
-                  totalCount
-                }
-              }
+          }
+        }
+      }
+    }
+  }
+}
+
+query Contribs($commitId:ID!, $since: GitTimestamp) {
+  node(id: $commitId) {
+    ... on Commit {
+      id
+      history(since: $since) {
+        nodes {
+          author {
+            user {
+              id
+              name
+              login
+              avatarUrl
             }
           }
         }
@@ -214,35 +214,18 @@ query CommitsForRepo($repoNodeId: ID!) {
   }
 }
 
-query CommitsForRepoSince($repoNodeId: ID!, $since: GitTimestamp!) {
-  node(id: $repoNodeId) {
-    ... on Repository {
+query CommitsByUser($historyRootId:ID!, $author: CommitAuthor!) {
+  node(id: $historyRootId) {
+    ... on Commit {
       id
-      name
-      defaultBranchRef {
-        name
-        target {
-          ... on Commit {
-            id
-            history(since: $since) {
-              totalCount
-              nodes {
-                author {
-                  name
-                  user {
-                    email
-                    login
-                    name
-                  }
-                }
-                additions
-                deletions
-                committedDate
-                parents {
-                  totalCount
-                }
-              }
-            }
+      history(author: $author) {
+        nodes {
+          id
+          additions
+          deletions
+          committedDate
+          parents {
+            totalCount
           }
         }
       }

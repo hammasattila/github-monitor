@@ -8,9 +8,10 @@ import { PRsDocument, PRsQuery } from "../api/graphql";
 import { PRCommentList } from "./CommentList";
 import { Page, PaginatedTable } from "./PaginatedTable";
 import { useState } from "react";
+import { Repo } from "../api/types";
 
-type Repo = Extract<PRsQuery['node'], { __typename?: 'Repository' | undefined }>
-type PR = NonNullable<ArrayElement<Repo["pullRequests"]['nodes']>> & { regexpResult?: string }
+type PRRepo = Repo<PRsQuery['node']>
+type PR = NonNullable<ArrayElement<PRRepo["pullRequests"]['nodes']>> & { regexpResult?: string }
 
 export const PullRequests = () => {
 	const navi = AppSelector((state) => state.navigation);
@@ -32,20 +33,18 @@ export const PullRequests = () => {
 			} catch (e) {
 				return "invalid";
 			}
-		return "NaN";
+		return "-";
 	}
 	
 	if (error) dispatch(addNotification(errorNotification(error.message)));
-	const repo = data?.node as Repo;
+	const repo = data?.node as PRRepo;
 	const PRedges = repo?.pullRequests;
 	const PRs: PR[] = PRedges?.nodes?.filter(definedNN) ?? [] as PR[];
 	const totalItemCount = PRedges?.totalCount ?? 0;
-	const pageOfItems: PR[] = PRs.map((pr) => {
-		return {
-			...pr,
-			regexpResult: getRegexResult(pr.comments.nodes?.[0]?.bodyText)
-		}
-	})
+	const pageOfItems: PR[] = PRs.map((pr) => ({
+		...pr,
+		regexpResult: getRegexResult(pr.comments.nodes?.[0]?.bodyText)
+	}))
 	
 	const columns = [
 		{
@@ -111,7 +110,7 @@ export const PullRequests = () => {
 	
 	return (
 		<>
-			<EuiFieldSearch onChange={(e) => setCommentRegex(e.target.value)} placeholder="Regexp in comments"
+			<EuiFieldSearch onChange={(e) => setCommentRegex(e.target.value)} placeholder="Search in comments"
 			                value={commentRegex}/>
 			<EuiSpacer size="s"/>
 			<PaginatedTable<PR>

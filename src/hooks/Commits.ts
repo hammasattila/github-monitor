@@ -1,103 +1,81 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from "@apollo/client";
-import moment from 'moment';
-import { AggregatedUserContribution, Commit, RepositoryWithCommits, UserContribution } from '../models/Commits';
-import { CommitsForRepoDocument } from "../api/graphql";
+import { ArrayElement, definedNN } from "../app/types";
+import { CommitsByUserDocument, CommitsByUserQuery } from "../api/graphql";
+import { AggregatedUserContribution, Commit } from "../api/types";
+import { useEffect, useState } from "react";
+import { useLazyQuery } from "@apollo/client";
+import moment from "moment";
+import { Contrib } from "../components/ContributorList";
 
-export const useCommits = (repoId: string, since?: Date) => {
-	const [loaded, setLoaded] = useState<boolean>(false);
-	const [commits, setCommits] = useState<Commit[] | undefined>();
-	const [commitsByUser, setCommitsByUser] = useState<UserContribution>({});
-	const [aggregatedCommitsByUser, setAggregatedCommitsByUser] = useState<AggregatedUserContribution>({});
+type HistoryCommit = NonNullable<ArrayElement<NonNullable<Commit<CommitsByUserQuery['node']>['history']['nodes']>>>
+
+export const useCommits = (items: { id: string, user: Contrib }[], latestCommitID: string) => {
+	const [contributions, setContributions] = useState<{ [userId: string]: AggregatedUserContribution }>({})
+	const [queryCommits, {
+		loading,
+		error
+	}] = useLazyQuery(CommitsByUserDocument, {defaultOptions: {errorPolicy: "all"}});
 	
-	const {loading, error, data} = useQuery(CommitsForRepoDocument, {
-		variables: {
-			repoNodeId: repoId
-		},
-		errorPolicy: "all"
-	});
-	
-	useEffect(() => {
-		if (loading || error) {
-			setLoaded(!loading);
-			setCommits(undefined);
-			setCommitsByUser({});
-			setAggregatedCommitsByUser({});
-			return;
+	function aggregateData(data: CommitsByUserQuery) {
+		const commit = data.node as Commit<CommitsByUserQuery['node']>;
+		const aggregatedContributions: AggregatedUserContribution = {
+			weeks: {},
+			total: {
+				count: 0,
+				additions: 0,
+				deletions: 0
+			}
 		}
-		
-		const repo = data?.node as RepositoryWithCommits;
-		const branch = repo.defaultBranchRef?.target;
-		
-		if (branch?.__typename === 'Commit') {
-			const listOfCommits = branch.history.nodes ?? []
-			const cs = listOfCommits.filter((c => (c?.parents.totalCount ?? 0) <= 1)).map(c => ({
-				author: c?.author?.user?.login ?? "",
-				additions: c?.additions ?? 0,
-				deletions: c?.deletions ?? 0,
-				date: new Date(c?.committedDate)
-			}));
-			const csbu = cs.reduce((acc: UserContribution, c: Commit) => {
-				if (acc[c.author] === undefined) {
-					acc[c.author] = [];
-				}
-				
-				acc[c.author].push(c);
-				return acc
-			}, {})
+		if (commit) {
+			const listOfCommits = commit.history.nodes as HistoryCommit[]
+			const commits = listOfCommits.filter(definedNN).filter((c => c.parents.totalCount <= 1)) ?? [];
 			
-			const acsbu: AggregatedUserContribution = {};
-			for (const commitauthor in csbu) {
-				acsbu[commitauthor] = {
-					weeks: {},
-					totalCount: 0,
-					totalAdditions: 0,
-					totalDeletions: 0
-				};
-				const ag = acsbu[commitauthor];
-				const acc = ag.weeks;
+			const ag = aggregatedContributions;
+			const acc = ag.weeks;
+			for (const c of commits) {
+				const week = moment(c.committedDate).startOf('week').toISOString();
+				if (!acc[week])
+					acc[week] = {
+						count: 0,
+						additions: 0,
+						deletions: 0
+					}
+				acc[week].additions += c.additions;
+				acc[week].deletions += c.deletions;
+				acc[week].count += 1;
 				
-				for (const commitdate in csbu[commitauthor]) {
-					const c = csbu[commitauthor][commitdate];
-					const week = moment(c.date).startOf('week').toISOString();
-					
-					if (!acc[week]) {
-						acc[week] = {
-							author: c.author,
-							additions: c.additions,
-							deletions: c.deletions,
-							date: c.date,
-							count: 1
-						};
-					} else {
-						acc[week].additions += c.additions;
-						acc[week].deletions += c.deletions;
-						acc[week].count += 1;
-					}
-					
-					ag.totalCount += 1;
-					ag.totalAdditions += c.additions;
-					ag.totalDeletions += c.deletions;
-					ag.lastCommitDate = c.date;
-					if (ag.firstCommitDate === undefined) {
-						ag.firstCommitDate = c.date
-					}
+				ag.total.additions += c.additions;
+				ag.total.deletions += c.deletions;
+				ag.total.count += 1;
+				ag.lastCommitDate = new Date(c.committedDate);
+				if (!ag.firstCommitDate) {
+					ag.firstCommitDate = new Date(c.committedDate)
 				}
 			}
-			
-			setLoaded(!loading);
-			setCommits(cs);
-			setCommitsByUser(csbu);
-			setAggregatedCommitsByUser(acsbu);
 		}
-
-	}, [loading, data, error]);
-	
-	return {
-		error,
-		loaded,
-		commits,
-		commitsByUser,
-		aggregatedCommitsByUser
+		return aggregatedContributions;
 	}
+	
+	function getStats(c: { id: string, user: Contrib }) {
+		return queryCommits({
+			variables: {
+				historyRootId: latestCommitID,
+				author: {id: c.id}
+			}, onCompleted: ((data) => {
+				setContributions((prevState) => {
+					prevState[c.id] = aggregateData(data)
+					return prevState
+				})
+			})
+		})
+	}
+	
+	useEffect(() => {
+		if (loading || error) return;
+		items.forEach((item) => {
+			if (!contributions[item.id]) {
+				getStats(item)
+			}
+		})
+	});
+	return contributions;
 }

@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react"
-import { AggregatedCommits, Commit } from "../models/Commits"
 import { Axis, BarSeries, Chart, Settings } from "@elastic/charts";
 import moment from "moment";
 import { useEuiTheme } from "@elastic/eui";
 import { EUI_CHARTS_THEME_DARK, EUI_CHARTS_THEME_LIGHT } from '@elastic/eui/dist/eui_charts_theme';
+import { AggregatedUserContribution } from "../api/types";
 
 interface CommitAnalysisProps {
-	commits: Commit[]
-	aggregatedCommits: AggregatedCommits
+	aggregatedCommits: AggregatedUserContribution
 }
 
-export const CommitAnalysis = ({commits, aggregatedCommits}: CommitAnalysisProps) => {
+export const ContributionGraphs = ({aggregatedCommits}: CommitAnalysisProps) => {
 	const theme = useEuiTheme();
 	const euiTheme = theme.colorMode === "DARK" ? EUI_CHARTS_THEME_DARK.theme : EUI_CHARTS_THEME_LIGHT.theme;
 	let [aggregatedData, setAggregatedData] = useState<{
@@ -22,9 +21,8 @@ export const CommitAnalysis = ({commits, aggregatedCommits}: CommitAnalysisProps
 	}[]>([]);
 	
 	useEffect(() => {
-		if (aggregatedCommits === undefined) {
+		if (!aggregatedCommits)
 			return;
-		}
 		
 		const weeks = aggregatedCommits.weeks ?? {};
 		const data = Object.keys(weeks).map((key: string) => {
@@ -33,7 +31,7 @@ export const CommitAnalysis = ({commits, aggregatedCommits}: CommitAnalysisProps
 			const nm = m.clone().add(7, 'days');
 			return {
 				week: `${m.year()}.${m.month()}.${m.date()} - ${nm.year()}.${nm.month()}.${nm.date()}`,
-				group: "C",
+				group: "Commit",
 				additions: week.additions,
 				deletions: -week.deletions,
 				commits: week.count
@@ -42,7 +40,6 @@ export const CommitAnalysis = ({commits, aggregatedCommits}: CommitAnalysisProps
 		
 		setAggregatedData(data);
 	}, [aggregatedCommits]);
-	
 	
 	return (
 		<>

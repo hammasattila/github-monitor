@@ -5,21 +5,21 @@ import { useDispatch } from "react-redux";
 import { addNotification, errorNotification } from "../features/notificationSlice";
 import { PRCommentsDocument, PRCommentsQuery } from "../api/graphql";
 import { ArrayElement, definedNN } from "../app/types";
+import { PR } from "../api/types";
 
 interface Props {
 	parentId: string
 }
 
-type PR = Extract<PRCommentsQuery['node'], { __typename?: 'PullRequest' | undefined }>
-type Comment = NonNullable<ArrayElement<PR["comments"]['nodes']>>
+type Comment = NonNullable<ArrayElement<PR<PRCommentsQuery['node']>["comments"]['nodes']>>
 
 export const PRCommentList = ({parentId}: Props) => {
 	const dispatch: AppDispatch = useDispatch();
 	
-	const {error, data} = useQuery(PRCommentsDocument, {variables: {id: parentId, last: 3}});
+	const {error, data} = useQuery(PRCommentsDocument, {variables: {id: parentId, last: 10}});
 	if (error) dispatch(addNotification(errorNotification(error.message)));
 	if (!data) return <EuiFlexGroup justifyContent="center"><EuiLoadingSpinner size="xxl"/></EuiFlexGroup>
-	const pr = data.node as PR;
+	const pr = data.node as PR<PRCommentsQuery['node']>;
 	const comments: EuiCommentProps[] = pr.comments.nodes?.filter(definedNN).map((comment: Comment) => {
 		return {
 			username: comment.author?.login ?? "",

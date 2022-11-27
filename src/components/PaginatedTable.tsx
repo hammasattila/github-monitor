@@ -20,7 +20,7 @@ interface Props<T> {
 	itemName: string
 	totalItemCount: number,
 	pageOfItems: T[],
-	itemsPerPageOptions: number[],
+	itemsPerPageOptions?: number[],
 	columns: EuiBasicTableColumn<T>[],
 	loading: boolean,
 	onChange: (newpage: Page, oldpage: Page) => Promise<boolean>,
@@ -38,7 +38,7 @@ export function PaginatedTable<T extends { id: string }>({
 	itemsPerPageOptions
 }: Props<T>) {
 	const [pageIndex, setPageIndex] = useState(0);
-	const [pageSize, setPageSize] = useState(itemsPerPageOptions.at(-1) ?? 10);
+	const [pageSize, setPageSize] = useState(itemsPerPageOptions?.at(-1) ?? 0);
 	const [itemIdToExpandedRowMap, setItemIdToExpandedRowMap] = useState<{ [x: string]: JSX.Element | undefined }>({});
 	
 	const expandButton: EuiBasicTableColumn<T> = {
@@ -111,6 +111,7 @@ export function PaginatedTable<T extends { id: string }>({
 				itemIdToExpandedRowMap={onExpand && itemIdToExpandedRowMap}
 				isExpandable={!!onExpand}
 				loading={loading}
+				compressed={true}
 			/>
 			{/*EuiBasicTable's pagination cannot be compressed :@*/}
 			<EuiSpacer size="m"/>
@@ -122,6 +123,7 @@ export function PaginatedTable<T extends { id: string }>({
 				pageCount={Math.ceil(totalItemCount / pageSize)}
 				onChangePage={handleChangePage}
 				onChangeItemsPerPage={handleChangePageSize}
+				showPerPageOptions={!!itemsPerPageOptions}
 			/>
 		</>
 	);
